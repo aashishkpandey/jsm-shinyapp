@@ -6,6 +6,33 @@
 library("shiny")
 library("fmsb")
 
+
+
+build.spiderplot = function(dat, title){  # input DF with top 2 rows being maxmins
+  
+  radarchart(dat,
+             axistype = 1,     # 0 means no axis label. 1 means center axis label only. 2 means around-the-chart label only. Upto 5
+             seg = round(max(dat)-min(dat))+1 ,          # The number of segments for each axis (default 4).
+             
+             plty = 1:(nrow(dat)-2),         # plot ka line type.
+             plwd = 1:(nrow(dat)-2),
+             pcol = 1:(nrow(dat)-2),
+             pdensity = c(20, 40),  # A vector of filling density of polygons: Default NULL, which is repeatedly used.
+             pangle = c(10, 45),  # A vector of the angles of lines used as filling polygons: Default 45, which is repeatedly used.
+             pfcol = 1:(nrow(dat)-2),   # plot.fill.color, vector of color codes for filling polygons: Default NA
+             vlabels = colnames(dat), #c("Total\nQOL", "Physical\naspects",   # look at the way line break \n is used inside the vlabels
+             # "Phychological\naspects", "Social\naspects", "Environmental\naspects"),
+             title = title, # "(axis=1, 5 segments, with specified vlabels)",
+             vlcex=1)  # Font size magnification for vlabels. If NULL, the font size is fixed at text()'s default. Default NULL.
+  
+  legend("bottomright",
+         legend = rownames(dat)[3:nrow(dat)],
+         # pch = c(15,16),
+         lwd = c(1:(nrow(dat)-2)),
+         col = c(1:(nrow(dat)-2)),
+         lty = c(1:(nrow(dat)-2)))
+}
+
 shinyServer(function(input, output) {
   #++_____________++
   ### Data import:
@@ -14,7 +41,8 @@ shinyServer(function(input, output) {
       # User has not uploaded a file yet
       return(data.frame())
     }
-    Dataset <- as.data.frame(read.table(input$file$datapath ,header=TRUE))
+    Dataset <- read.csv(input$file$datapath ,header=TRUE)
+    row.names(Dataset) = Dataset[,1]; Dataset= Dataset[,2:ncol(Dataset)]
     #Dataset = t(Dataset)
     return(Dataset)
   })
@@ -35,7 +63,7 @@ shinyServer(function(input, output) {
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     # Variable selection:
     
-    checkboxGroupInput("rows", "Choose Firms (At least 2 attributes must be selected)",
+    checkboxGroupInput("rows", "Choose Firms (At least 2 Firms must be selected) - Only for Spider Chart",
                        colnames(Dataset()), colnames(Dataset()))
     
   })
@@ -46,7 +74,8 @@ shinyServer(function(input, output) {
       # User has not uploaded a file yet
       return(data.frame())
     }
-    Dataset1 <- as.data.frame(read.table(input$file1$datapath ,header=TRUE))
+    Dataset1 <- read.csv(input$file1$datapath ,header=TRUE)
+    row.names(Dataset1) = Dataset1[,1]; Dataset1= Dataset1[,2:ncol(Dataset1)]
     return(Dataset1)
   })
   
@@ -82,10 +111,19 @@ shinyServer(function(input, output) {
   if (is.null(input$file1))
   return(NULL)
     
-  mydata = t(as.data.frame(read.table(input$file$datapath ,header=TRUE)))
+  mydata = read.csv(input$file$datapath ,header=TRUE)
+  row.names(mydata) = mydata[,1];
+  mydata = mydata[,2:ncol(mydata)]; 
+  mydata = t(mydata)
   mydata = mydata[,input$Attr]
+    
+    
+  # mydata = t(as.data.frame(read.table(input$file$datapath ,header=TRUE)))
+  # mydata = mydata[,input$Attr]
   
-  pref = as.data.frame(read.table(input$file1$datapath ,header=TRUE))
+  pref = read.csv(input$file1$datapath ,header=TRUE)
+  row.names(pref) = pref[,1]
+  pref = pref[,2:ncol(pref)]
   pref = pref[input$users,]
   
   ### --- Para 3 of code ---- ###
@@ -168,7 +206,10 @@ shinyServer(function(input, output) {
     if (is.null(input$file1))
       return(NULL)
     
-    mydata2 = t(as.data.frame(read.table(input$file$datapath ,header=TRUE)))
+    mydata2 = read.csv(input$file$datapath ,header=TRUE)
+    row.names(mydata2) = mydata2[,1];
+    mydata2 = mydata2[,2:ncol(mydata2)]; 
+    mydata2 = t(mydata2)
     mydata2 = mydata2[,input$Attr]
     fit = prcomp(mydata2) # extract prin compts
   plot(fit, "Variance of PCA")
@@ -179,39 +220,17 @@ shinyServer(function(input, output) {
     
     if (is.null(input$file))
     return(NULL)
-
-     
-    build.spiderplot = function(dat, title){  # input DF with top 2 rows being maxmins
-
-      radarchart(dat,
-                 axistype = 1,     # 0 means no axis label. 1 means center axis label only. 2 means around-the-chart label only. Upto 5
-                 seg = round(max(dat)-min(dat))+1 ,          # The number of segments for each axis (default 4).
-
-                 plty = 1:(nrow(dat)-2),         # plot ka line type.
-                 plwd = 1:(nrow(dat)-2),
-                 pcol = 1:(nrow(dat)-2),
-                 pdensity = c(20, 40),  # A vector of filling density of polygons: Default NULL, which is repeatedly used.
-                 pangle = c(10, 45),  # A vector of the angles of lines used as filling polygons: Default 45, which is repeatedly used.
-                 pfcol = 1:(nrow(dat)-2),   # plot.fill.color, vector of color codes for filling polygons: Default NA
-                 vlabels = colnames(dat), #c("Total\nQOL", "Physical\naspects",   # look at the way line break \n is used inside the vlabels
-                 # "Phychological\naspects", "Social\naspects", "Environmental\naspects"),
-                 title = title, # "(axis=1, 5 segments, with specified vlabels)",
-                 vlcex=1)  # Font size magnification for vlabels. If NULL, the font size is fixed at text()'s default. Default NULL.
-
-      legend("bottomright",
-             legend = rownames(dat)[3:nrow(dat)],
-             # pch = c(15,16),
-             lwd = c(1:(nrow(dat)-2)),
-             col = c(1:(nrow(dat)-2)),
-             lty = c(1:(nrow(dat)-2)))
-    }
-    
     # if (is.null(input$file1))
     #   return(NULL)
     # 
   
-  mydata3 = t(as.data.frame(read.table(input$file$datapath ,header=TRUE)))
-  mydata3 = mydata3[input$rows,input$Attr]
+     mydata3 = read.csv(input$file$datapath ,header=TRUE)
+     row.names(mydata3) = mydata3[,1];
+     mydata3 = mydata3[,2:ncol(mydata3)]; 
+     mydata3 = t(mydata3)
+     mydata3 = mydata3[input$rows,input$Attr]
+     
+  #mydata3 = mydata3[input$rows,input$Attr]
     
   brand = t(mydata3)
   brd.mean = apply(brand, 2, mean)
@@ -231,15 +250,15 @@ shinyServer(function(input, output) {
   
   # Download data files
     output$downloadData1 <- downloadHandler(
-      filename = function() { "officestar perceptual.txt" },
+      filename = function() { "officestar perceptual.csv" },
       content = function(file) {
-        write.table(read.table("data/officestar perceptual.txt"), file, row.names=T, col.names=T,quote = F, sep = "\t")
+        write.csv(read.csv("data/officestar perceptual.csv"), file, row.names=F)
       }
     )
         output$downloadData2 <- downloadHandler(
-        filename = function() { "officestar preference.txt" },
+        filename = function() { "officestar preference.csv" },
         content = function(file) {
-          write.table(read.table("data/officestar preference.txt"), file, row.names=T, col.names=T,quote = F,sep = "\t")
+          write.csv(read.csv("data/officestar preference.csv"), file, row.names=F)
         }
       )
       
