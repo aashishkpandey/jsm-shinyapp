@@ -6,8 +6,6 @@
 library("shiny")
 library("fmsb")
 
-
-
 build.spiderplot = function(dat, title){  # input DF with top 2 rows being maxmins
   
   radarchart(dat,
