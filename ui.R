@@ -16,10 +16,10 @@ shinyUI(fluidPage(
 
     # Upload data:
     h5(p("Perceptual Data Input")),
-    fileInput("file", "Upload Perceptual data (tab delimited txt file)"),
+    fileInput("file", "Upload Perceptual data"),
     # upload secon data
     h5(p("Preference Data Input")),
-    fileInput("file1", "Upload Preference Data (tab delimited txt file)"),
+    fileInput("file1", "Upload Preference Data"),
     # Variable selection:
     h5(p("Data Selection (Optional)")),
     h6(p("A -  Perceptual (Attributes)")),
