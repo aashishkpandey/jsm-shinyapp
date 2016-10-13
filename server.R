@@ -32,6 +32,7 @@ build.spiderplot = function(dat, title){  # input DF with top 2 rows being maxmi
 }
 
 shinyServer(function(input, output) {
+  
   #++_____________++
   ### Data import:
   Dataset <- reactive({
@@ -54,7 +55,7 @@ shinyServer(function(input, output) {
     checkboxGroupInput("Attr", "Choose Attributes (At least 3 attributes must be selected)",
                        rownames(Dataset()), rownames(Dataset()))
     
-      })
+  })
   
   #++_____________++
   output$varselect2 <- renderUI({
@@ -99,110 +100,115 @@ shinyServer(function(input, output) {
     if (is.null(input$users) || length(input$users)==0) return(NULL)
     return((Dataset1()[input$users,]))
   })
- 
+  
   #++_____________++
   output$plot = renderPlot({  
-  
-  if (is.null(input$file))
-  return(NULL)
-  
-  if (is.null(input$file1))
-  return(NULL)
     
-  mydata = read.csv(input$file$datapath ,header=TRUE)
-  row.names(mydata) = mydata[,1];
-  mydata = mydata[,2:ncol(mydata)]; 
-  mydata = t(mydata)
-  mydata = mydata[,input$Attr]
+    if (is.null(input$file))
+      return(NULL)
     
     
-  # mydata = t(as.data.frame(read.table(input$file$datapath ,header=TRUE)))
-  # mydata = mydata[,input$Attr]
-  
-  pref = read.csv(input$file1$datapath ,header=TRUE)
-  row.names(pref) = pref[,1]
-  pref = pref[,2:ncol(pref)]
-  pref = pref[input$users,]
-  
-  ### --- Para 3 of code ---- ###
-  # --- write the JSM func ---
-  
-  JSM <- function(inp1, prefs){
     
-    # inp1 = perception matrix with row and column headers
-    # brands in rows and attributes in columns
-    # prefs = preferences matrix
+    mydata = read.csv(input$file$datapath ,header=TRUE)
+    row.names(mydata) = mydata[,1];
+    mydata = mydata[,2:ncol(mydata)]; 
+    mydata = t(mydata)
+    mydata = mydata[,input$Attr]
     
-    par(pty="m")
     
-    fit = prcomp(inp1, scale.=TRUE) # extract prin compts
+    # mydata = t(as.data.frame(read.table(input$file$datapath ,header=TRUE)))
+    # mydata = mydata[,input$Attr]
     
-    plot(fit$rotation[,1:2], # use only top 2 prinComps
-         
-         type ="n",xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), # plot parms
-         
-         main ="Joint Space map ") # plot title
-    
-    abline(h=0); abline(v=0) # build horiz & vert axes
-    
-    attribnames = colnames(inp1)
-    
-    brdnames = rownames(inp1)
-    
-    # <-- insert attrib vectors as arrows--
-    
-    for (i1 in 1:nrow(fit$rotation)){
-      
-      arrows(0,0, x1=fit$rotation[i1,1]*fit$sdev[1], y1=fit$rotation[i1,2]*fit$sdev[2], col="blue", lwd=1.5);
-      
-      text(x=fit$rotation[i1,1]*fit$sdev[1],y=fit$rotation[i1,2]*fit$sdev[2], labels=attribnames[i1],col="blue", cex=1.1)}
-    
-    # <--- make co-ords within (-1,1) frame #
-    
-    fit1 = fit
-    
-    fit1$x[,1] = fit$x[,1]/apply(abs(fit$x),2,sum)[1]
-    
-    fit1$x[,2] = fit$x[,2]/apply(abs(fit$x),2,sum)[2]
-    
-    points(x = fit1$x[,1], y = fit1$x[,2], pch = 19, col ="red")
-    
-    text(x = fit1$x[,1], y = fit1$x[,2], labels = brdnames,col ="black", cex = 1.1)
-    
-    # --- add preferences to map ---#
-    
-    k1 = 2; #scale-down factor
-    
-    pref = data.matrix(prefs)# make data compatible
-    
-    pref1 = pref %*% fit1$x[, 1:2]
-    
-    for (i1 in 1:nrow(pref1)){
-      
-      segments(0, 0, x1 = pref1[i1,1]/k1, y1 = pref1[i1,2]/k1, col="maroon2", lwd=1.25)
-      
-      points(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, pch=19, col="maroon2")
-      
-      text(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, labels = rownames(pref)[i1], adj = c(0.5, 0.5), col ="maroon2", cex = 1.1)
-      
+    if (is.null(input$file1)){
+      pref = matrix(0,2,nrow(mydata))
     }
     
-    # voila, we're done! #
+    else {
+      pref = read.csv(input$file1$datapath ,header=TRUE)
+      row.names(pref) = pref[,1]
+      pref = pref[,2:ncol(pref)]
+      pref = pref[input$users,]
+    }
+    ### --- Para 3 of code ---- ###
+    # --- write the JSM func ---
     
-  } 					# JSM func ends
-  
-  JSM(mydata, pref)
-  
+    JSM <- function(inp1, prefs){
+      
+      # inp1 = perception matrix with row and column headers
+      # brands in rows and attributes in columns
+      # prefs = preferences matrix
+      
+      par(pty="m")
+      
+      fit = prcomp(inp1, scale.=TRUE) # extract prin compts
+      
+      plot(fit$rotation[,1:2], # use only top 2 prinComps
+           
+           type ="n",xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), # plot parms
+           
+           main ="Joint Space map ") # plot title
+      
+      abline(h=0); abline(v=0) # build horiz & vert axes
+      
+      attribnames = colnames(inp1)
+      
+      brdnames = rownames(inp1)
+      
+      # <-- insert attrib vectors as arrows--
+      
+      for (i1 in 1:nrow(fit$rotation)){
+        
+        arrows(0,0, x1=fit$rotation[i1,1]*fit$sdev[1], y1=fit$rotation[i1,2]*fit$sdev[2], col="blue", lwd=1.5);
+        
+        text(x=fit$rotation[i1,1]*fit$sdev[1],y=fit$rotation[i1,2]*fit$sdev[2], labels=attribnames[i1],col="blue", cex=1.1)}
+      
+      # <--- make co-ords within (-1,1) frame #
+      
+      fit1 = fit
+      
+      fit1$x[,1] = fit$x[,1]/apply(abs(fit$x),2,sum)[1]
+      
+      fit1$x[,2] = fit$x[,2]/apply(abs(fit$x),2,sum)[2]
+      
+      points(x = fit1$x[,1], y = fit1$x[,2], pch = 19, col ="red")
+      
+      text(x = fit1$x[,1], y = fit1$x[,2], labels = brdnames,col ="black", cex = 1.1)
+      
+      # --- add preferences to map ---#
+      
+      k1 = 2; #scale-down factor
+      
+      pref = data.matrix(prefs)# make data compatible
+      
+      pref1 = pref %*% fit1$x[, 1:2]
+      
+      for (i1 in 1:nrow(pref1)){
+        
+        segments(0, 0, x1 = pref1[i1,1]/k1, y1 = pref1[i1,2]/k1, col="maroon2", lwd=1.25)
+        
+        points(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, pch=19, col="maroon2")
+        
+        text(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, labels = rownames(pref)[i1], adj = c(0.5, 0.5), col ="maroon2", cex = 1.1)
+        
+      }
+      
+      # voila, we're done! #
+      
+    } 					# JSM func ends
+    
+    
+    JSM(mydata, pref)
+    
   })
   
   # Show table:
   output$plot1 = renderPlot({  
     
-    if (is.null(input$file))
-      return(NULL)
-    
-    if (is.null(input$file1))
-      return(NULL)
+    # if (is.null(input$file))
+    #   return(NULL)
+    # 
+    # if (is.null(input$file1))
+    #   return(NULL)
     
     mydata2 = read.csv(input$file$datapath ,header=TRUE)
     row.names(mydata2) = mydata2[,1];
@@ -210,55 +216,55 @@ shinyServer(function(input, output) {
     mydata2 = t(mydata2)
     mydata2 = mydata2[,input$Attr]
     fit = prcomp(mydata2) # extract prin compts
-  plot(fit, "Variance of PCA")
-  
+    plot(fit, "Variance of PCA")
+    
   })
   
-   output$spiderplot = renderPlot({  
+  output$spiderplot = renderPlot({  
     
     if (is.null(input$file))
-    return(NULL)
+      return(NULL)
     # if (is.null(input$file1))
     #   return(NULL)
     # 
-  
-     mydata3 = read.csv(input$file$datapath ,header=TRUE)
-     row.names(mydata3) = mydata3[,1];
-     mydata3 = mydata3[,2:ncol(mydata3)]; 
-     mydata3 = t(mydata3)
-     mydata3 = mydata3[input$rows,input$Attr]
-     
-  #mydata3 = mydata3[input$rows,input$Attr]
     
-  brand = t(mydata3)
-  brd.mean = apply(brand, 2, mean)
-  
-  b0 = t(brand)
-  max1 = apply(b0, 2, max); min1 = apply(b0, 2, min);
-  # max1; min1
-  maxmin.df =  data.frame(rbind(max1, min1));
-  # maxmin.df
-  colnames(b0) = colnames(maxmin.df)
-  brd.df = data.frame(rbind(maxmin.df, b0))
-  #brd.df
-  
-  build.spiderplot(brd.df, "Spider Chart")
+    mydata3 = read.csv(input$file$datapath ,header=TRUE)
+    row.names(mydata3) = mydata3[,1];
+    mydata3 = mydata3[,2:ncol(mydata3)]; 
+    mydata3 = t(mydata3)
+    mydata3 = mydata3[input$rows,input$Attr]
+    
+    #mydata3 = mydata3[input$rows,input$Attr]
+    
+    brand = t(mydata3)
+    brd.mean = apply(brand, 2, mean)
+    
+    b0 = t(brand)
+    max1 = apply(b0, 2, max); min1 = apply(b0, 2, min);
+    # max1; min1
+    maxmin.df =  data.frame(rbind(max1, min1));
+    # maxmin.df
+    colnames(b0) = colnames(maxmin.df)
+    brd.df = data.frame(rbind(maxmin.df, b0))
+    #brd.df
+    
+    build.spiderplot(brd.df, "Spider Chart")
   })
   
   
   # Download data files
-    output$downloadData1 <- downloadHandler(
-      filename = function() { "officestar perceptual.csv" },
-      content = function(file) {
-        write.csv(read.csv("data/officestar perceptual.csv"), file, row.names=F)
-      }
-    )
-        output$downloadData2 <- downloadHandler(
-        filename = function() { "officestar preference.csv" },
-        content = function(file) {
-          write.csv(read.csv("data/officestar preference.csv"), file, row.names=F)
-        }
-      )
+  output$downloadData1 <- downloadHandler(
+    filename = function() { "officestar perceptual.csv" },
+    content = function(file) {
+      write.csv(read.csv("data/officestar perceptual.csv"), file, row.names=F)
+    }
+  )
+  output$downloadData2 <- downloadHandler(
+    filename = function() { "officestar preference.csv" },
+    content = function(file) {
+      write.csv(read.csv("data/officestar preference.csv"), file, row.names=F)
+    }
+  )
       
   
 })
