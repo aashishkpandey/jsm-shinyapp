@@ -68,8 +68,12 @@ can deselect/select variables in perceptual data in left-sidebar panel as per re
   in left-sidebar panel. As soon as user makes a change in data selection, accordingly all the tabs will be updated. ",
            align="justify")),
 tabPanel("Example dataset", h4(p("Download Sample perceptual & preference file")), 
-         downloadButton('downloadData1', 'Download Perceptual file'),br(),br(),
-         downloadButton('downloadData2', 'Download Preference file'),br(),br(),
+         downloadButton('downloadData1', 'Download Perceptual file example 1'),br(),br(),
+         downloadButton('downloadData2', 'Download Preference file example 1'),br(),br(),
+         
+         downloadButton('downloadData3', 'Download Perceptual file example 2'),br(),br(),
+         downloadButton('downloadData4', 'Download Preference file example 2'),br(),br(),
+         
          p("Please note that download will not work with RStudio interface. Download will work only in web-browsers. So open this app in a web-browser and then download the example file. For opening this app in web-browser click on \"Open in Browser\" as shown below -"),
          img(src = "example1.png")),
 

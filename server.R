@@ -192,8 +192,7 @@ shinyServer(function(input, output) {
         
       }
       
-      # voila, we're done! #
-      
+     
     } 					# JSM func ends
     
     
@@ -265,6 +264,20 @@ shinyServer(function(input, output) {
       write.csv(read.csv("data/officestar preference.csv"), file, row.names=F)
     }
   )
-      
+
+  output$downloadData3 <- downloadHandler(
+    filename = function() { "JSM Cities Perception.csv" },
+    content = function(file) {
+      write.csv(read.csv("data/JSM Cities Perception.csv"), file, row.names=F)
+    }
+  )
+  
+  output$downloadData4 <- downloadHandler(
+    filename = function() { "JSM Cities Preferece.csv" },
+    content = function(file) {
+      write.csv(read.csv("data/JSM Cities Preferece.csv"), file, row.names=F)
+    }
+  )
+  
   
 })
