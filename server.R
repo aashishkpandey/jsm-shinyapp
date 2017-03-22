@@ -85,11 +85,11 @@ JSM <- function(inp1, prefs,k0,k1){
   
   for (i1 in 1:nrow(pref1)){
     
-    segments(0, 0, x1 = pref1[i1,1]/k1, y1 = pref1[i1,2]/k1, col="maroon2", lwd=1.25)
+    segments(0, 0, x1 = pref1[i1,1]*k1, y1 = pref1[i1,2]*k1, col="maroon2", lwd=1.25)
     
-    points(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, pch=19, col="maroon2")
+    points(x = pref1[i1,1]*k1, y = pref1[i1,2]*k1, pch=19, col="maroon2")
     
-    text(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, labels = rownames(pref)[i1], adj = c(0.5, 0.5), col ="maroon2", cex = 1.1)
+    text(x = pref1[i1,1]*k1, y = pref1[i1,2]*k1, labels = rownames(pref)[i1], adj = c(0.5, 0.5), col ="maroon2", cex = 1.1)
     
   }
   
@@ -160,6 +160,7 @@ shinyServer(function(input, output) {
     if (is.null(input$Attr) || length(input$Attr)==0) return(NULL)
     d = Dataset()[input$Attr,]
     d$Attributes = row.names(d)
+    d = d[,c(ncol(d),1:(ncol(d)-1))]
     return(d)
   })
   
@@ -168,6 +169,7 @@ shinyServer(function(input, output) {
     if (is.null(input$users) || length(input$users)==0) return(NULL)
     d1 = Dataset1()[input$users,]
     d1$user = row.names(d1)
+    d1 = d1[,c(ncol(d1),1:(ncol(d1)-1))]
     return(d1)
   })
   

@@ -5,7 +5,7 @@
 
 library("shiny")
 #library("foreign")
-
+ 
 shinyUI(fluidPage(
   
   tags$head(includeScript("google_analytics.js")),
@@ -22,7 +22,7 @@ shinyUI(fluidPage(
     fileInput("file1", "Upload Preference Data"),
     # Variable selection:
     numericInput("k0","Scaling Factor Entities",1.5),
-    numericInput("k1","Scaling Factor User",0.7),
+    numericInput("k1","Scaling Factor User",1.5),
     h5(p("Data Selection (Optional)")),
     h6(p("A -  Perceptual (Attributes)")),
     htmlOutput("varselect"),
