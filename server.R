@@ -31,6 +31,72 @@ build.spiderplot = function(dat, title){  # input DF with top 2 rows being maxmi
          lty = c(1:(nrow(dat)-2)))
 }
 
+# --- write the JSM func ---
+
+JSM <- function(inp1, prefs,k0,k1){
+  
+  # inp1 = perception matrix with row and column headers
+  # brands in rows and attributes in columns
+  # prefs = preferences matrix
+  
+  par(pty="m")
+  
+  fit = prcomp(inp1, scale.=TRUE) # extract prin compts
+  
+  plot(fit$rotation[,1:2], # use only top 2 prinComps
+       
+       type ="n",xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), # plot parms
+       
+       main ="Joint Space map ") # plot title
+  
+  abline(h=0); abline(v=0) # build horiz & vert axes
+  
+  attribnames = colnames(inp1)
+  
+  brdnames = rownames(inp1)
+  
+  # <-- insert attrib vectors as arrows--
+  
+  for (i1 in 1:nrow(fit$rotation)){
+    
+    arrows(0,0, x1=fit$rotation[i1,1]*fit$sdev[1], y1=fit$rotation[i1,2]*fit$sdev[2], col="blue", lwd=1.5);
+    
+    text(x=fit$rotation[i1,1]*fit$sdev[1],y=fit$rotation[i1,2]*fit$sdev[2], labels=attribnames[i1],col="blue", cex=1.1)}
+  
+  # <--- make co-ords within (-1,1) frame #
+  
+  fit1 = fit
+  
+  fit1$x[,1] = fit$x[,1]/apply(abs(fit$x),2,sum)[1]
+  
+  fit1$x[,2] = fit$x[,2]/apply(abs(fit$x),2,sum)[2]
+  
+  points(x = fit1$x[,1]*k0, y = fit1$x[,2]*k0, pch = 19, col ="red")
+  
+  text(x = fit1$x[,1]*k0, y = fit1$x[,2]*k0, labels = brdnames,col ="black", cex = 1.1)
+  
+  # --- add preferences to map ---#
+  
+  k1 = k1; #scale-down factor
+  
+  pref = data.matrix(prefs)# make data compatible
+  
+  pref1 = pref %*% fit1$x[, 1:2]
+  
+  for (i1 in 1:nrow(pref1)){
+    
+    segments(0, 0, x1 = pref1[i1,1]/k1, y1 = pref1[i1,2]/k1, col="maroon2", lwd=1.25)
+    
+    points(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, pch=19, col="maroon2")
+    
+    text(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, labels = rownames(pref)[i1], adj = c(0.5, 0.5), col ="maroon2", cex = 1.1)
+    
+  }
+  
+  
+} 					# JSM func ends
+
+
 shinyServer(function(input, output) {
   
   #++_____________++
@@ -92,13 +158,17 @@ shinyServer(function(input, output) {
   #++_____________++
   output$table <- renderTable({
     if (is.null(input$Attr) || length(input$Attr)==0) return(NULL)
-    return((Dataset()[input$Attr,]))
+    d = Dataset()[input$Attr,]
+    d$Attributes = row.names(d)
+    return(d)
   })
   
   #++_____________++
   output$table1 <- renderTable({
     if (is.null(input$users) || length(input$users)==0) return(NULL)
-    return((Dataset1()[input$users,]))
+    d1 = Dataset1()[input$users,]
+    d1$user = row.names(d1)
+    return(d1)
   })
   
   #++_____________++
@@ -130,73 +200,8 @@ shinyServer(function(input, output) {
       pref = pref[input$users,]
     }
     ### --- Para 3 of code ---- ###
-    # --- write the JSM func ---
-    
-    JSM <- function(inp1, prefs){
-      
-      # inp1 = perception matrix with row and column headers
-      # brands in rows and attributes in columns
-      # prefs = preferences matrix
-      
-      par(pty="m")
-      
-      fit = prcomp(inp1, scale.=TRUE) # extract prin compts
-      
-      plot(fit$rotation[,1:2], # use only top 2 prinComps
-           
-           type ="n",xlim=c(-1.5,1.5), ylim=c(-1.5,1.5), # plot parms
-           
-           main ="Joint Space map ") # plot title
-      
-      abline(h=0); abline(v=0) # build horiz & vert axes
-      
-      attribnames = colnames(inp1)
-      
-      brdnames = rownames(inp1)
-      
-      # <-- insert attrib vectors as arrows--
-      
-      for (i1 in 1:nrow(fit$rotation)){
-        
-        arrows(0,0, x1=fit$rotation[i1,1]*fit$sdev[1], y1=fit$rotation[i1,2]*fit$sdev[2], col="blue", lwd=1.5);
-        
-        text(x=fit$rotation[i1,1]*fit$sdev[1],y=fit$rotation[i1,2]*fit$sdev[2], labels=attribnames[i1],col="blue", cex=1.1)}
-      
-      # <--- make co-ords within (-1,1) frame #
-      
-      fit1 = fit
-      
-      fit1$x[,1] = fit$x[,1]/apply(abs(fit$x),2,sum)[1]
-      
-      fit1$x[,2] = fit$x[,2]/apply(abs(fit$x),2,sum)[2]
-      
-      points(x = fit1$x[,1], y = fit1$x[,2], pch = 19, col ="red")
-      
-      text(x = fit1$x[,1], y = fit1$x[,2], labels = brdnames,col ="black", cex = 1.1)
-      
-      # --- add preferences to map ---#
-      
-      k1 = 2; #scale-down factor
-      
-      pref = data.matrix(prefs)# make data compatible
-      
-      pref1 = pref %*% fit1$x[, 1:2]
-      
-      for (i1 in 1:nrow(pref1)){
-        
-        segments(0, 0, x1 = pref1[i1,1]/k1, y1 = pref1[i1,2]/k1, col="maroon2", lwd=1.25)
-        
-        points(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, pch=19, col="maroon2")
-        
-        text(x = pref1[i1,1]/k1, y = pref1[i1,2]/k1, labels = rownames(pref)[i1], adj = c(0.5, 0.5), col ="maroon2", cex = 1.1)
-        
-      }
-      
-     
-    } 					# JSM func ends
-    
-    
-    JSM(mydata, pref)
+
+    JSM(mydata, pref,k0 =input$k0 ,k1 = input$k1)
     
   })
   

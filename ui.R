@@ -21,10 +21,11 @@ shinyUI(fluidPage(
     h5(p("Preference Data Input")),
     fileInput("file1", "Upload Preference Data"),
     # Variable selection:
+    numericInput("k0","Scaling Factor Entities",1.5),
+    numericInput("k1","Scaling Factor User",0.7),
     h5(p("Data Selection (Optional)")),
     h6(p("A -  Perceptual (Attributes)")),
     htmlOutput("varselect"),
-    
     h6(p("B -  Perceptual (Firms - only for Spider Chart)")),
     htmlOutput("varselect2"),
     
